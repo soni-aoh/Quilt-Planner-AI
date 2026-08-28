@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summaries
+  - name: fabrics
+    description: Fabric library
+  - name: projects
+    description: Quilt projects
+  - name: design
+    description: Structured design assistance
 paths:
   /healthz:
     get:
@@ -24,7 +32,194 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /fabrics:
+    get:
+      operationId: listFabrics
+      tags: [fabrics]
+      summary: List fabrics
+      responses:
+        "200":
+          description: Fabric library
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fabric"
+    post:
+      operationId: createFabric
+      tags: [fabrics]
+      summary: Add a fabric
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FabricInput"
+      responses:
+        "201":
+          description: Created fabric
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fabric"
+  /fabrics/{id}:
+    patch:
+      operationId: updateFabric
+      tags: [fabrics]
+      summary: Update a fabric
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FabricUpdate"
+      responses:
+        "200":
+          description: Updated fabric
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fabric"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteFabric
+      tags: [fabrics]
+      summary: Delete a fabric
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Fabric deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List quilt projects
+      responses:
+        "200":
+          description: Quilt projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a quilt project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a quilt project
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Quilt project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a quilt project
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a quilt project
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Project deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /design/interpret:
+    post:
+      operationId: interpretDesign
+      tags: [design]
+      summary: Interpret a design brief into editable layouts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DesignPrompt"
+      responses:
+        "200":
+          description: Structured design variants
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DesignInterpretation"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +228,267 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    DashboardSummary:
+      type: object
+      properties:
+        fabricCount:
+          type: number
+        projectCount:
+          type: number
+        activeProject:
+          anyOf:
+            - $ref: "#/components/schemas/Project"
+            - type: "null"
+        recentProjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+      required: [fabricCount, projectCount, activeProject, recentProjects]
+    Fabric:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        widthOfFabric:
+          type: number
+        amountOnHand:
+          type: number
+        amountUnit:
+          type: string
+          enum: [yards, metres]
+        directional:
+          type: boolean
+        scaleKnown:
+          type: boolean
+        patternTags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, name, color, imageUrl, widthOfFabric, amountOnHand, amountUnit, directional, scaleKnown, patternTags, notes, createdAt, updatedAt]
+    FabricInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        widthOfFabric:
+          type: number
+          minimum: 1
+        amountOnHand:
+          type: number
+          minimum: 0
+        amountUnit:
+          type: string
+          enum: [yards, metres]
+        directional:
+          type: boolean
+        scaleKnown:
+          type: boolean
+        patternTags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+      required: [name, color, widthOfFabric, amountOnHand, amountUnit, directional, scaleKnown, patternTags]
+    FabricUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        widthOfFabric:
+          type: number
+          minimum: 1
+        amountOnHand:
+          type: number
+          minimum: 0
+        amountUnit:
+          type: string
+          enum: [yards, metres]
+        directional:
+          type: boolean
+        scaleKnown:
+          type: boolean
+        patternTags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: ["string", "null"]
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        finishedWidth:
+          type: number
+        finishedHeight:
+          type: number
+        seamAllowance:
+          type: number
+        unit:
+          type: string
+          enum: [inches]
+        quiltType:
+          type: string
+          enum: [grid, medallion, strips, custom]
+        layoutJson:
+          type: object
+          additionalProperties: true
+        aiPrompt:
+          type: ["string", "null"]
+        sourcePhotoUrl:
+          type: ["string", "null"]
+        reverseEngineered:
+          type: boolean
+        status:
+          type: string
+          enum: [draft, planning, complete]
+        updatedAt:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, description, finishedWidth, finishedHeight, seamAllowance, unit, quiltType, layoutJson, aiPrompt, sourcePhotoUrl, reverseEngineered, status, updatedAt, createdAt]
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        finishedWidth:
+          type: number
+          minimum: 1
+        finishedHeight:
+          type: number
+          minimum: 1
+        seamAllowance:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          enum: [inches]
+        quiltType:
+          type: string
+          enum: [grid, medallion, strips, custom]
+        layoutJson:
+          type: object
+          additionalProperties: true
+        aiPrompt:
+          type: ["string", "null"]
+        sourcePhotoUrl:
+          type: ["string", "null"]
+        reverseEngineered:
+          type: boolean
+        status:
+          type: string
+          enum: [draft, planning, complete]
+      required: [name, finishedWidth, finishedHeight, seamAllowance, unit, quiltType, layoutJson, reverseEngineered, status]
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        finishedWidth:
+          type: number
+          minimum: 1
+        finishedHeight:
+          type: number
+          minimum: 1
+        seamAllowance:
+          type: number
+          minimum: 0
+        quiltType:
+          type: string
+          enum: [grid, medallion, strips, custom]
+        layoutJson:
+          type: object
+          additionalProperties: true
+        aiPrompt:
+          type: ["string", "null"]
+        sourcePhotoUrl:
+          type: ["string", "null"]
+        reverseEngineered:
+          type: boolean
+        status:
+          type: string
+          enum: [draft, planning, complete]
+    DesignPrompt:
+      type: object
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        fabricIds:
+          type: array
+          items:
+            type: string
+        finishedWidth:
+          type: number
+          minimum: 1
+        finishedHeight:
+          type: number
+          minimum: 1
+      required: [prompt, fabricIds, finishedWidth, finishedHeight]
+    DesignInterpretation:
+      type: object
+      properties:
+        summary:
+          type: string
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/DesignVariant"
+      required: [summary, variants]
+    DesignVariant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        quiltType:
+          type: string
+          enum: [grid, medallion, strips, custom]
+        layoutJson:
+          type: object
+          additionalProperties: true
+      required: [id, name, description, quiltType, layoutJson]
 

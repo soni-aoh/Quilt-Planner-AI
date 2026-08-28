@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Quilt Planner AI"
+description = "A friendly, mathematically accurate quilt planning studio for uploading fabric swatches, designing editable quilts, and producing practical cutting plans and yardage summaries."
+version = "1.0.0"
+id = "artifacts/quilt-planner-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23841
+
+[services.development]
+run = "pnpm --filter @workspace/quilt-planner-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/quilt-planner-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/quilt-planner-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23841"
+BASE_PATH = "/"
